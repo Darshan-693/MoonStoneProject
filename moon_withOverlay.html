@@ -72,7 +72,7 @@
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         // Load the CSV and add it as an overlay
-        fetch('moon_lat_long_smoothed_values.csv')
+        fetch('./moon_lat_long_positive_values.csv')
             .then(response => response.text())
             .then(csvText => {
                 const dataSource = new Cesium.CustomDataSource('MoonData');

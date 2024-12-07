@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 # Load the CSV data
-csv_path = "./moon_lat_long_smoothed_values.csv"  # Replace with your CSV file path
+csv_path = "./moon_lat_long_positive_values.csv"  # Replace with your CSV file path
 data = pd.read_csv(csv_path)
 
 # Create a grid for latitude and longitude
