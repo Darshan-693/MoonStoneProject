@@ -27,7 +27,7 @@
 </head>
 <body>
     <div id="cesiumContainer"></div>
-    <div id="infoBox">Click on the Moon to see latitude and longitude</div>
+    <div id="infoBox">Click on the Moon to see latitude, longitude, and value</div>
     <script>
         // Initialize the Cesium Viewer
         const viewer = new Cesium.Viewer('cesiumContainer', {
@@ -57,6 +57,8 @@
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         const infoBox = document.getElementById('infoBox');
 
+        let csvData = [];
+
         handler.setInputAction((click) => {
             const pickedPosition = viewer.scene.pickPosition(click.position);
             if (Cesium.defined(pickedPosition)) {
@@ -64,15 +66,31 @@
                 const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
                 const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
 
+                // Find the closest value from the CSV data
+                let closestValue = 'N/A';
+                let minDistance = Number.MAX_VALUE;
+
+                csvData.forEach(row => {
+                    const [lat, lon, value] = row;
+                    const distance = Math.sqrt(
+                        Math.pow(lat - latitude, 2) + Math.pow(lon - longitude, 2)
+                    );
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestValue = value;
+                    }
+                });
+
                 infoBox.innerHTML = `
                     Latitude: ${latitude}°<br>
-                    Longitude: ${longitude}°
+                    Longitude: ${longitude}°<br>
+                    Value: ${closestValue}
                 `;
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         // Load the CSV and add it as an overlay
-        fetch('./moon_lat_long_positive_values.csv')
+        fetch('./moon_lat_long_smoothed_values.csv')
             .then(response => response.text())
             .then(csvText => {
                 const dataSource = new Cesium.CustomDataSource('MoonData');
@@ -83,6 +101,9 @@
                     const [latitude, longitude, value] = row.split(',');
 
                     if (latitude && longitude && value) {
+                        const numericValue = parseFloat(value);
+                        csvData.push([parseFloat(latitude), parseFloat(longitude), numericValue]);
+
                         // Add a point for each row
                         dataSource.entities.add({
                             position: Cesium.Cartesian3.fromDegrees(
@@ -91,9 +112,9 @@
                                 1737400 // Approx. Moon radius for height
                             ),
                             point: {
-                                pixelSize: 5 + parseFloat(value) / 10, // Scale size by value
+                                pixelSize: 5 + numericValue / 10, // Scale size by value
                                 color: Cesium.Color.fromHsl(
-                                    0.6 - parseFloat(value) / 50, // Hue based on value
+                                    0.6 - numericValue / 50, // Hue based on value
                                     1.0,
                                     0.5
                                 )
